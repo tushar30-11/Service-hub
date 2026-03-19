@@ -3,22 +3,20 @@ import Axios from "axios";
 import { useLocation, Link } from "react-router-dom";
 
 function Services() {
-
   const [catlist, setcatlist] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredServices, setFilteredServices] = useState([]);
   const [hovered, setHovered] = useState(null);
   const [tilt, setTilt] = useState({});
+  const [sortOrder, setSortOrder] = useState("");
+  const [priceFilter, setPriceFilter] = useState("");
 
   const location = useLocation();
   const category_id = location.state?.category_id;
 
   useEffect(() => {
-
     const fetchServices = async () => {
-
       try {
-
         let response;
 
         if (category_id) {
@@ -27,37 +25,49 @@ function Services() {
             { category_id: category_id }
           );
         } else {
-          response = await Axios.post(
-            "http://127.0.0.1:1337/api/allservices"
-          );
+          response = await Axios.post("http://127.0.0.1:1337/api/allservices");
         }
 
         setcatlist(response.data);
         setFilteredServices(response.data);
-
       } catch (error) {
         console.error("Error fetching services:", error);
       }
-
     };
 
     fetchServices();
-
   }, [category_id]);
 
   useEffect(() => {
+    let result = [...catlist];
 
-    const result = catlist.filter((item) =>
+    // Search filter
+    result = result.filter((item) =>
       item.service_name.toLowerCase().includes(search.toLowerCase())
     );
 
+    // Price filter
+    if (priceFilter === "under500") {
+      result = result.filter((item) => Number(item.price) < 500);
+    } else if (priceFilter === "500to1000") {
+      result = result.filter(
+        (item) => Number(item.price) >= 500 && Number(item.price) <= 1000
+      );
+    } else if (priceFilter === "above1000") {
+      result = result.filter((item) => Number(item.price) > 1000);
+    }
+
+    // Sort by price
+    if (sortOrder === "lowToHigh") {
+      result.sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sortOrder === "highToLow") {
+      result.sort((a, b) => Number(b.price) - Number(a.price));
+    }
+
     setFilteredServices(result);
+  }, [search, catlist, sortOrder, priceFilter]);
 
-  }, [search, catlist]);
-
-  // 3D Tilt Effect
   const handleMouseMove = (e, id) => {
-
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -69,7 +79,6 @@ function Services() {
       id,
       transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
     });
-
   };
 
   const resetTilt = () => {
@@ -85,8 +94,6 @@ function Services() {
         }}
       >
         <div className="container">
-
-          {/* TITLE */}
           <div className="row pb-30 text-center">
             <div className="col-md-12">
               <h2 style={{ color: "#222" }}>
@@ -95,9 +102,9 @@ function Services() {
             </div>
           </div>
 
-          {/* SEARCH */}
-          <div className="row mb-4">
-            <div className="col-md-6 mx-auto">
+          {/* SEARCH + FILTER */}
+          <div className="row mb-4" style={{ rowGap: "15px" }}>
+            <div className="col-md-4">
               <input
                 type="text"
                 placeholder="🔍 Search services..."
@@ -115,21 +122,59 @@ function Services() {
                 }}
               />
             </div>
+
+            <div className="col-md-4">
+              <select
+                value={priceFilter}
+                onChange={(e) => setPriceFilter(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  borderRadius: "30px",
+                  border: "1px solid #ddd",
+                  outline: "none",
+                  background: "rgba(255,255,255,0.9)",
+                  boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+                  cursor: "pointer"
+                }}
+              >
+                <option value="">Filter by Price</option>
+                <option value="under500">Under ₹500</option>
+                <option value="500to1000">₹500 - ₹1000</option>
+                <option value="above1000">Above ₹1000</option>
+              </select>
+            </div>
+
+            <div className="col-md-4">
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  borderRadius: "30px",
+                  border: "1px solid #ddd",
+                  outline: "none",
+                  background: "rgba(255,255,255,0.9)",
+                  boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+                  cursor: "pointer"
+                }}
+              >
+                <option value="">Sort by Price</option>
+                <option value="lowToHigh">Low to High</option>
+                <option value="highToLow">High to Low</option>
+              </select>
+            </div>
           </div>
 
           <div className="row">
-
             {filteredServices.length === 0 ? (
               <p style={{ width: "100%", textAlign: "center", color: "#333" }}>
                 No Services Available
               </p>
             ) : (
-
               filteredServices.map((val) => (
-
                 <div className="col-md-6 col-lg-4 mb-30" key={val.service_id}>
-
-                  {/* BORDER */}
                   <div
                     onMouseEnter={() => setHovered(val.service_id)}
                     onMouseLeave={() => {
@@ -137,18 +182,16 @@ function Services() {
                       resetTilt();
                     }}
                     onMouseMove={(e) => handleMouseMove(e, val.service_id)}
-
                     style={{
                       padding: "2px",
                       borderRadius: "20px",
-                      background: hovered === val.service_id
-                        ? "linear-gradient(135deg, #667eea, #764ba2)"
-                        : "#e0e0e0",
+                      background:
+                        hovered === val.service_id
+                          ? "linear-gradient(135deg, #667eea, #764ba2)"
+                          : "#e0e0e0",
                       transition: "0.4s"
                     }}
                   >
-
-                    {/* GLASS CARD */}
                     <div
                       style={{
                         borderRadius: "18px",
@@ -159,17 +202,19 @@ function Services() {
                         transition: "all 0.4s ease",
                         transform:
                           hovered === val.service_id
-                            ? `${tilt.id === val.service_id ? tilt.transform : ""} scale(1.05)`
+                            ? `${
+                                tilt.id === val.service_id ? tilt.transform : ""
+                              } scale(1.05)`
                             : "scale(1)",
                         boxShadow:
                           hovered === val.service_id
                             ? "0 15px 35px rgba(0,0,0,0.2)"
-                            : "0 5px 15px rgba(0,0,0,0.1)",
+                            : "0 5px 15px rgba(0,0,0,0.1)"
                       }}
                     >
-
-                      {/* IMAGE */}
-                      <figure style={{ overflow: "hidden", borderRadius: "12px" }}>
+                      <figure
+                        style={{ overflow: "hidden", borderRadius: "12px" }}
+                      >
                         <img
                           src={`http://127.0.0.1:1337/public/services/${val.service_image}`}
                           alt={val.service_name}
@@ -179,29 +224,34 @@ function Services() {
                             objectFit: "cover",
                             transition: "0.5s",
                             transform:
-                              hovered === val.service_id ? "scale(1.1)" : "scale(1)"
+                              hovered === val.service_id
+                                ? "scale(1.1)"
+                                : "scale(1)"
                           }}
                         />
                       </figure>
 
-                      {/* NAME */}
                       <h3 style={{ marginTop: "15px", color: "#222" }}>
                         {val.service_name}
                       </h3>
 
-                      {/* PRICE */}
-                      <p style={{
-                        fontWeight: "bold",
-                        fontSize: "18px",
-                        color: "#667eea"
-                      }}>
+                      <p
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: "18px",
+                          color: "#667eea"
+                        }}
+                      >
                         ₹ {val.price}
                       </p>
 
-                      {/* BUTTONS */}
-                      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-
-                        {/* VIEW MORE */}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          marginTop: "10px"
+                        }}
+                      >
                         <Link
                           to={`/servicedetails/${val.service_id}`}
                           style={{
@@ -213,20 +263,24 @@ function Services() {
                             color: "#fff",
                             background: "#188d9c",
                             transition: "0.3s",
-                            transform: hovered === val.service_id ? "scale(1.05)" : "scale(1)",
-                            boxShadow: "0 5px 15px rgba(102,126,234,0.4)"
+                            transform:
+                              hovered === val.service_id
+                                ? "scale(1.05)"
+                                : "scale(1)",
+                            boxShadow: "0 5px 15px rgba(24,141,156,0.4)"
                           }}
                           onMouseEnter={(e) => {
-                            e.target.style.boxShadow = "0 10px 25px rgba(102,126,234,0.6)";
+                            e.target.style.boxShadow =
+                              "0 10px 25px rgba(24,141,156,0.6)";
                           }}
                           onMouseLeave={(e) => {
-                            e.target.style.boxShadow = "0 5px 15px rgba(102,126,234,0.4)";
+                            e.target.style.boxShadow =
+                              "0 5px 15px rgba(24,141,156,0.4)";
                           }}
                         >
                           View More
                         </Link>
 
-                        {/* BOOK */}
                         <Link
                           to="/bookservice"
                           state={{ service: val }}
@@ -239,33 +293,30 @@ function Services() {
                             color: "#fff",
                             background: "#188d9c",
                             transition: "0.3s",
-                            transform: hovered === val.service_id ? "scale(1.05)" : "scale(1)",
-                            boxShadow: "0 5px 15px rgba(102,126,234,0.4)"
+                            transform:
+                              hovered === val.service_id
+                                ? "scale(1.05)"
+                                : "scale(1)",
+                            boxShadow: "0 5px 15px rgba(24,141,156,0.4)"
                           }}
                           onMouseEnter={(e) => {
-                            e.target.style.boxShadow = "0 10px 25px rgba(102,126,234,0.6)";
+                            e.target.style.boxShadow =
+                              "0 10px 25px rgba(24,141,156,0.6)";
                           }}
                           onMouseLeave={(e) => {
-                            e.target.style.boxShadow = "0 5px 15px rgba(102,126,234,0.4)";
+                            e.target.style.boxShadow =
+                              "0 5px 15px rgba(24,141,156,0.4)";
                           }}
                         >
                           Book
                         </Link>
-
                       </div>
-
                     </div>
-
                   </div>
-
                 </div>
-
               ))
-
             )}
-
           </div>
-
         </div>
       </section>
     </>

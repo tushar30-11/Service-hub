@@ -7,6 +7,9 @@ function Sidebar() {
   const [openService, setOpenService] = useState(false);
   const [openSlider, setOpenSlider] = useState(false);
 
+  // ✅ NEW STATE
+  const [openRole, setOpenRole] = useState(false);
+
   return (
     <nav className="sidebar sidebar-offcanvas" id="sidebar">
       <ul className="nav">
@@ -55,7 +58,7 @@ function Sidebar() {
           )}
         </li>
 
-        {/* ✅ Manage Service (Only View Service) */}
+        {/* Manage Service */}
         <li className="nav-item">
           <div
             className="nav-link"
@@ -78,34 +81,63 @@ function Sidebar() {
           )}
         </li>
 
+        {/* ✅ NEW: Manage Role */}
+        <li className="nav-item">
+          <div
+            className="nav-link"
+            onClick={() => setOpenRole(!openRole)}
+            style={{ cursor: "pointer" }}
+          >
+            <i className="fas fa-user-tag menu-icon"></i>
+            <span className="menu-title">Manage Role</span>
+            <i className="menu-arrow"></i>
+          </div>
+
+          {openRole && (
+            <ul className="nav flex-column sub-menu">
+              <li className="nav-item">
+                <Link className="nav-link" to="/add-role">
+                  Add Role
+                </Link>
+              </li>
+
+              <li className="nav-item">
+                <Link className="nav-link" to="/view-role">
+                  View Role
+                </Link>
+              </li>
+            </ul>
+          )}
+        </li>
+
         {/* Manage Slider */}
-<li className="nav-item">
-  <div
-    className="nav-link"
-    onClick={() => setOpenSlider(!openSlider)}
-    style={{ cursor: "pointer" }}
-  >
-    <i className="fas fa-images menu-icon"></i>
-    <span className="menu-title">Manage Slider</span>
-    <i className="menu-arrow"></i>
-  </div>
+        <li className="nav-item">
+          <div
+            className="nav-link"
+            onClick={() => setOpenSlider(!openSlider)}
+            style={{ cursor: "pointer" }}
+          >
+            <i className="fas fa-images menu-icon"></i>
+            <span className="menu-title">Manage Slider</span>
+            <i className="menu-arrow"></i>
+          </div>
 
-  {openSlider && (
-    <ul className="nav flex-column sub-menu">
-      <li className="nav-item">
-        <Link className="nav-link" to="/viewslider">
-          View Slider
-        </Link>
-      </li>
+          {openSlider && (
+            <ul className="nav flex-column sub-menu">
+              <li className="nav-item">
+                <Link className="nav-link" to="/viewslider">
+                  View Slider
+                </Link>
+              </li>
 
-      <li className="nav-item">
-        <Link className="nav-link" to="/addslider">
-          Add Slider
-        </Link>
-      </li>
-    </ul>
-  )}
-</li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/addslider">
+                  Add Slider
+                </Link>
+              </li>
+            </ul>
+          )}
+        </li>
 
       </ul>
     </nav>

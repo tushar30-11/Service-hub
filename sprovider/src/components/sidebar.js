@@ -5,14 +5,16 @@ function Sidebar() {
     <>
       <div className="main-sidebar sidebar-style-2">
         <aside id="sidebar-wrapper">
+          
+          {/* LOGO */}
           <div className="sidebar-brand">
             <a href="/">
-             
               <span className="logo-name">Service Hub</span>
             </a>
           </div>
 
           <ul className="sidebar-menu">
+
             <li className="menu-header">MAIN</li>
 
             {/* DASHBOARD */}
@@ -23,7 +25,7 @@ function Sidebar() {
               </a>
             </li>
 
-            {/* ===== SERVICE CATEGORY (FIXED) ===== */}
+            {/* ===== SERVICE CATEGORY ===== */}
             <li className="dropdown">
               <a
                 href="/"
@@ -71,6 +73,30 @@ function Sidebar() {
               </ul>
             </li>
 
+            {/* ===== MANAGE STAFF (NEW) ===== */}
+            <li className="dropdown">
+              <a
+                href="/"
+                onClick={(e) => e.preventDefault()}
+                className="menu-toggle nav-link has-dropdown"
+              >
+                <i className="fa fa-users"></i>
+                <span>Manage Staff</span>
+              </a>
+              <ul className="dropdown-menu">
+                <li>
+                  <a className="nav-link" href="/add-staff">
+                    Add Staff
+                  </a>
+                </li>
+                <li>
+                  <a className="nav-link" href="/view-staff">
+                    View Staff
+                  </a>
+                </li>
+              </ul>
+            </li>
+
             {/* ===== MANAGE BOOKING ===== */}
             <li className="dropdown">
               <a
@@ -89,6 +115,7 @@ function Sidebar() {
                 </li>
               </ul>
             </li>
+
           </ul>
         </aside>
       </div>

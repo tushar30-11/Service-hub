@@ -1167,6 +1167,213 @@ res.json({status:1});
 
 });
 
+app.get('/api/countservice',(req,res)=>{
+  const query="SELECT COUNT(provider_id) as totalservice from provider_details";
+  con.query(query,(err,result)=>{
+    res.send(result);
+  });
+});
+
+app.get('/api/countcategory', (req, res) => {
+  const query = "SELECT COUNT(category_id) as totalcategory FROM tbl_category";
+  con.query(query, (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.send([]);
+    }
+    res.send(result);
+  });
+});
+
+app.get('/api/countservices', (req, res) => {
+  const query = "SELECT COUNT(service_id) as totalservices FROM tbl_service";
+  con.query(query, (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.send([]);
+    }
+    res.send(result);
+  });
+});
+
+app.get('/api/countbookings', (req, res) => {
+  const query = "SELECT COUNT(booking_id) as totalbookings FROM tbl_booking";
+  con.query(query, (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.send([]);
+    }
+    res.send(result);
+  });
+});
+
+app.post("/api/provider/dashboard/categorycount", (req, res) => {
+  const { provider_id } = req.body;
+
+  const query = `
+    SELECT COUNT(DISTINCT category_id) AS totalcategory
+    FROM tbl_service
+    WHERE provider_id = ?
+  `;
+
+  con.query(query, [provider_id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.send([]);
+    }
+    res.send(result);
+  });
+});
+
+app.post("/api/provider/dashboard/servicecount", (req, res) => {
+  const { provider_id } = req.body;
+
+  const query = `
+    SELECT COUNT(service_id) AS totalservice
+    FROM tbl_service
+    WHERE provider_id = ?
+  `;
+
+  con.query(query, [provider_id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.send([]);
+    }
+    res.send(result);
+  });
+});
+
+app.post("/api/provider/dashboard/bookingcount", (req, res) => {
+  const { provider_id } = req.body;
+
+  const query = `
+    SELECT COUNT(b.booking_id) AS totalbooking
+    FROM tbl_booking b
+    INNER JOIN tbl_service s ON b.service_id = s.service_id
+    WHERE s.provider_id = ?
+  `;
+
+  con.query(query, [provider_id], (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.send([]);
+    }
+    res.send(result);
+  });
+});
+
+
+// role api
+
+app.post("/api/addrole", (req, res) => {
+  const { role_name } = req.body;
+
+  if (!role_name) {
+    return res.send({ success: false, message: "Role name required" });
+  }
+
+  const query = "INSERT INTO roles (role_name) VALUES (?)";
+
+  con.query(query, [role_name], (err, result) => {
+    if (err) {
+      return res.send({ success: false, message: "Role already exists or DB error" });
+    }
+
+    res.send({ success: true, message: "Role added successfully" });
+  });
+});
+
+app.get("/api/getroles", (req, res) => {
+
+  const query = "SELECT * FROM roles ORDER BY id DESC";
+
+  con.query(query, (err, result) => {
+    if (err) {
+      return res.send([]);
+    }
+
+    res.send(result);
+  });
+});
+
+app.delete("/api/deleterole/:id", (req, res) => {
+
+  const role_id = req.params.id;
+
+  // check if role used in staff
+  const checkQuery = "SELECT * FROM provider_staff WHERE role_id = ?";
+
+  con.query(checkQuery, [role_id], (err, result) => {
+
+    if (result.length > 0) {
+      return res.send({
+        success: false,
+        message: "Role is assigned to staff, cannot delete"
+      });
+    }
+
+    const deleteQuery = "DELETE FROM roles WHERE id = ?";
+
+    con.query(deleteQuery, [role_id], (err, result) => {
+      if (err) {
+        return res.send({ success: false, message: "Delete error" });
+      }
+
+      res.send({ success: true });
+    });
+
+  });
+
+});
+
+//ADD STAFF API
+app.post("/api/provider/addstaff", (req, res) => {
+
+  const { provider_id, name, email, phone, role_id } = req.body;
+
+  const query = `
+    INSERT INTO provider_staff (provider_id, name, email, phone, role_id)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  con.query(query, [provider_id, name, email, phone, role_id], (err, result) => {
+
+    if (err) {
+      return res.send({ success: false });
+    }
+
+    res.send({ success: true });
+
+  });
+
+});
+
+//VIEW STAFF API
+
+app.post("/api/provider/viewstaff", (req, res) => {
+
+  const { provider_id } = req.body;
+
+  const query = `
+    SELECT ps.*, r.role_name 
+    FROM provider_staff ps
+    JOIN roles r ON ps.role_id = r.id
+    WHERE ps.provider_id = ?
+    ORDER BY ps.id DESC
+  `;
+
+  con.query(query, [provider_id], (err, result) => {
+
+    if (err) {
+      return res.send([]);
+    }
+
+    res.send(result);
+
+  });
+
+});
+
 // ================= START SERVER =================
 app.listen(1337, () => {
   console.log("Server running on http://127.0.0.1:1337");

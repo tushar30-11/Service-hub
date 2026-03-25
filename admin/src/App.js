@@ -11,6 +11,10 @@ import ViewServices from "./pages/ViewServices";
 import ViewSlider from "./pages/viewslider";
 import AddSlider from "./pages/addslider";
 
+/* ✅ NEW IMPORTS */
+import AddRole from "./pages/AddRole";
+import ViewRole from "./pages/ViewRole";
+
 
 // PRIVATE ROUTE (Session Based)
 function PrivateRoute({ children }) {
@@ -86,6 +90,31 @@ function App() {
             <PrivateRoute>
               <Layout>
                 <ViewServices />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+
+        {/* ✅ ADD ROLE */}
+        <Route
+          path="/add-role"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <AddRole />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
+        {/* ✅ VIEW ROLE */}
+        <Route
+          path="/view-role"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <ViewRole />
               </Layout>
             </PrivateRoute>
           }

@@ -290,7 +290,7 @@ function Services() {
                             padding: "10px",
                             borderRadius: "12px",
                             textDecoration: "none",
-                            color: "#fff",
+                            color: "#ffffff",
                             background: "#188d9c",
                             transition: "0.3s",
                             transform:

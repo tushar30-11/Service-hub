@@ -17,6 +17,10 @@ import EditCategory from "./pages/editcategory";
 import EditService from "./pages/EditService";
 import Profile from "./pages/Profile";
 
+/* ✅ NEW IMPORTS */
+import AddStaff from "./pages/AddStaff";
+import ViewStaff from "./pages/ViewStaff";
+
 function Layout({ children }) {
   return (
     <>
@@ -80,6 +84,25 @@ function App() {
           element={
             <Layout>
               <ViewServices />
+            </Layout>
+          }
+        />
+
+        {/* ✅ STAFF ROUTES ADDED */}
+        <Route
+          path="/add-staff"
+          element={
+            <Layout>
+              <AddStaff />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/view-staff"
+          element={
+            <Layout>
+              <ViewStaff />
             </Layout>
           }
         />

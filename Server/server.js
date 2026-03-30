@@ -983,33 +983,35 @@ app.post("/api/bookservice", (req, res) => {
 
 });
 
-app.post("/api/providerbookings", (req,res)=>{
+app.post("/api/providerbookings", (req, res) => {
 
-const provider_id = req.body.provider_id;
+  const provider_id = req.body.provider_id;
 
-const sql = `
-SELECT 
-b.*, 
-u.name,
-u.phone,
-s.service_name
-FROM tbl_booking b
-JOIN tbl_user u ON b.user_id = u.user_id
-JOIN tbl_service s ON b.service_id = s.service_id
-WHERE b.provider_id = ?
-ORDER BY b.booking_id DESC
-`;
+  const sql = `
+    SELECT 
+      b.*,
+      u.name,
+      u.phone,
+      s.service_name,
+      ps.name AS staff_name   -- 🔥 IMPORTANT
+    FROM tbl_booking b
+    JOIN tbl_user u ON b.user_id = u.user_id
+    JOIN tbl_service s ON b.service_id = s.service_id
+    LEFT JOIN provider_staff ps ON b.staff_id = ps.staff_id
+    WHERE b.provider_id = ?
+    ORDER BY b.booking_id DESC
+  `;
 
-con.query(sql,[provider_id],(err,result)=>{
+  con.query(sql, [provider_id], (err, result) => {
 
-if(err){
-console.log(err);
-return res.json([]);
-}
+    if (err) {
+      console.log("BOOKING ERROR:", err);
+      return res.json([]);
+    }
 
-res.json(result);
+    res.json(result);
 
-});
+  });
 
 });
 
@@ -1331,6 +1333,14 @@ app.post("/api/provider/addstaff", (req, res) => {
 
   const { provider_id, name, email, phone, role_id } = req.body;
 
+  // 🔒 VALIDATION
+  if (!provider_id || !name || !phone || !role_id) {
+    return res.send({
+      success: false,
+      message: "Required fields missing"
+    });
+  }
+
   const query = `
     INSERT INTO provider_staff (provider_id, name, email, phone, role_id)
     VALUES (?, ?, ?, ?, ?)
@@ -1339,36 +1349,90 @@ app.post("/api/provider/addstaff", (req, res) => {
   con.query(query, [provider_id, name, email, phone, role_id], (err, result) => {
 
     if (err) {
-      return res.send({ success: false });
+      console.log("ADD STAFF ERROR:", err);
+      return res.send({
+        success: false,
+        message: "Database error"
+      });
     }
 
-    res.send({ success: true });
+    res.send({
+      success: true,
+      message: "Staff added successfully"
+    });
 
   });
 
 });
-
 //VIEW STAFF API
 
 app.post("/api/provider/viewstaff", (req, res) => {
 
   const { provider_id } = req.body;
 
+  if (!provider_id) {
+    return res.send([]);
+  }
+
   const query = `
-    SELECT ps.*, r.role_name 
+    SELECT 
+      ps.staff_id,
+      ps.name,
+      ps.email,
+      ps.phone,
+      ps.role_id,
+      r.role_name
     FROM provider_staff ps
     JOIN roles r ON ps.role_id = r.id
     WHERE ps.provider_id = ?
-    ORDER BY ps.id DESC
+    ORDER BY ps.staff_id DESC
   `;
 
   con.query(query, [provider_id], (err, result) => {
 
     if (err) {
+      console.log("VIEW STAFF ERROR:", err);
       return res.send([]);
     }
 
     res.send(result);
+
+  });
+
+});
+
+//  ASSIGN STAFF API
+app.post("/api/provider/assignstaff", (req, res) => {
+
+  const { booking_id, staff_id } = req.body;
+
+  if (!booking_id || !staff_id) {
+    return res.send({
+      success: false,
+      message: "Missing data"
+    });
+  }
+
+  const query = `
+    UPDATE tbl_booking 
+    SET staff_id = ? 
+    WHERE booking_id = ?
+  `;
+
+  con.query(query, [staff_id, booking_id], (err, result) => {
+
+    if (err) {
+      console.log("ASSIGN STAFF ERROR:", err);
+      return res.send({
+        success: false,
+        message: "Database error"
+      });
+    }
+
+    res.send({
+      success: true,
+      message: "Staff assigned successfully"
+    });
 
   });
 

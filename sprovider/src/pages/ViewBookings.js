@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function ViewBookings() {
 
   const [bookings, setBookings] = useState([]);
+  const navigate = useNavigate();
 
   // SESSION CHECK
   const user = JSON.parse(sessionStorage.getItem("mydata"));
@@ -73,11 +75,12 @@ function ViewBookings() {
                     <thead>
                       <tr>
                         <th>#</th>
-                        <th>Customer Name</th>
+                        <th>Customer</th>
                         <th>Phone</th>
                         <th>Service</th>
                         <th>Date</th>
                         <th>Time</th>
+                        <th>Staff</th>
                         <th>Status</th>
                         <th>Action</th>
                       </tr>
@@ -92,17 +95,26 @@ function ViewBookings() {
                           <tr key={b.booking_id}>
 
                             <td>{index + 1}</td>
-
                             <td>{b.name}</td>
-
                             <td>{b.phone}</td>
-
                             <td>{b.service_name}</td>
-
                             <td>{b.booking_day}</td>
-
                             <td>{b.time_slot}</td>
 
+                            {/* ✅ SHOW STAFF */}
+                            <td>
+                              {b.staff_name ? (
+                                <span className="badge badge-success">
+                                  {b.staff_name}
+                                </span>
+                              ) : (
+                                <span className="badge badge-secondary">
+                                  Not Assigned
+                                </span>
+                              )}
+                            </td>
+
+                            {/* STATUS */}
                             <td>
 
                               {b.status === 0 && (
@@ -123,8 +135,10 @@ function ViewBookings() {
 
                             </td>
 
+                            {/* ACTION */}
                             <td>
 
+                              {/* PENDING */}
                               {b.status === 0 && (
                                 <>
                                   <button
@@ -143,13 +157,37 @@ function ViewBookings() {
                                 </>
                               )}
 
+                              {/* ACCEPTED */}
                               {b.status === 1 && (
-                                <button
-                                  className="btn btn-primary btn-sm"
-                                  onClick={() => updateStatus(b.booking_id, 2)}
-                                >
-                                  Complete
-                                </button>
+                                <>
+                                  <button
+                                    className="btn btn-primary btn-sm mr-2"
+                                    onClick={() => updateStatus(b.booking_id, 2)}
+                                  >
+                                    Complete
+                                  </button>
+
+                                  {/* 🔥 ASSIGN BUTTON */}
+                                  {b.staff_id ? (
+                                    <button
+                                      className="btn btn-secondary btn-sm"
+                                      disabled
+                                    >
+                                      Assigned
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className="btn btn-info btn-sm"
+                                      onClick={() =>
+                                        navigate("/assign-staff", {
+                                          state: { booking: b }
+                                        })
+                                      }
+                                    >
+                                      Assign Staff
+                                    </button>
+                                  )}
+                                </>
                               )}
 
                             </td>
@@ -161,7 +199,7 @@ function ViewBookings() {
                       ) : (
 
                         <tr>
-                          <td colSpan="8" className="text-center">
+                          <td colSpan="9" className="text-center">
                             No bookings found
                           </td>
                         </tr>

@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 /* ✅ NEW IMPORTS */
 import AddStaff from "./pages/AddStaff";
 import ViewStaff from "./pages/ViewStaff";
+import AssignStaff from "./pages/AssignStaff";
 
 function Layout({ children }) {
   return (
@@ -142,6 +143,15 @@ function App() {
             </Layout>
           }
         />
+
+          <Route
+            path="/assign-staff"
+            element={
+          <Layout>
+            <AssignStaff />
+          </Layout>
+        }
+      />
 
       </Routes>
     </BrowserRouter>

@@ -154,7 +154,7 @@ onChange={handleChange}
 </div>
 
 
-<button
+<button style={{background:"#0084B4", color:"#fff"}}
 className="btn btn-success w-100"
 onClick={updateProfile}
 >

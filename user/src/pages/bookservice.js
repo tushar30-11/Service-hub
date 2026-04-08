@@ -8,16 +8,13 @@ function BookService() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 🔥 GET FULL SERVICE OBJECT
   const service = location.state?.service;
 
-  // 🔥 EXTRACT DATA FROM OBJECT
   const service_id = service?.service_id;
   const provider_id = service?.provider_id;
   const price = service?.price;
   const title = service?.service_name;
 
-  // 🔥 USER DATA
   const user = JSON.parse(sessionStorage.getItem("userdata"));
 
   const [address, setAddress] = useState("");
@@ -25,7 +22,6 @@ function BookService() {
   const [slot, setSlot] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ❌ SAFETY CHECK
   if (!service_id || !provider_id) {
     return (
       <div style={{ textAlign: "center", marginTop: "50px" }}>
@@ -40,13 +36,10 @@ function BookService() {
     );
   }
 
-  // 🔥 TODAY DATE (NO PAST BOOKING)
   const today = new Date().toISOString().split("T")[0];
 
-  const bookNow = async () => {
-
-    console.log("Clicked");
-    console.log("DATA:", { service_id, provider_id, user });
+  // 🔥 PAYMENT FUNCTION (NEW)
+  const handlePayment = async () => {
 
     if (!address.trim() || !date || !slot) {
       Swal.fire("Error", "Please fill all fields", "error");
@@ -63,47 +56,60 @@ function BookService() {
 
     try {
 
-      const response = await Axios.post(
-        "http://127.0.0.1:1337/api/bookservice",
-        {
-          user_id: user.user_id,
-          provider_id: provider_id,
-          service_id: service_id,
-          address: address,
-          booking_day: date,
-          time_slot: slot
-        }
+      // 🔥 CREATE ORDER
+      const res = await Axios.post(
+        "http://127.0.0.1:1337/api/createorder",
+        { amount: price }
       );
 
-      console.log("API RESPONSE:", response.data);
+      const options = {
+        key: "rzp_test_SaY0UR8jNHBi3V",
+        amount: res.data.amount,
+        currency: "INR",
+        name: "Service Hub",
+        description: title,
+        order_id: res.data.id,
 
-      if (response.data.status === 1 || response.data.success) {
+        handler: async function () {
 
-        Swal.fire({
-          icon: "success",
-          title: "Booked!",
-          text: "Service booked successfully"
-        });
+          // 🔥 PAYMENT SUCCESS → SAVE BOOKING
+          await Axios.post(
+            "http://127.0.0.1:1337/api/bookservice",
+            {
+              user_id: user.user_id,
+              provider_id: provider_id,
+              service_id: service_id,
+              address: address,
+              booking_day: date,
+              time_slot: slot,
+              payment_status: "Paid" 
+            }
+          );
 
-        navigate("/services");
+          Swal.fire({
+            icon: "success",
+            title: "Payment Successful 🎉",
+            text: "Booking Confirmed!"
+          });
 
-      } else {
+          navigate("/mybookings");
+        },
 
-        Swal.fire(
-          "Error",
-          response.data.message || "Booking failed",
-          "error"
-        );
+        theme: {
+          color: "#0084B4"
+        }
+      };
 
-      }
+      const rzp = new window.Razorpay(options);
+      rzp.open();
 
     } catch (error) {
 
-      console.log("ERROR:", error);
+      console.log(error);
 
       Swal.fire(
         "Error",
-        "Server error. Please try again.",
+        "Payment failed. Try again.",
         "error"
       );
 
@@ -137,7 +143,6 @@ function BookService() {
         <p><strong>Name :</strong> {user?.name}</p>
         <p><strong>Phone :</strong> {user?.phone}</p>
 
-        {/* ADDRESS */}
         <div className="form-group">
           <label>Service Address</label>
 
@@ -152,7 +157,6 @@ function BookService() {
 
         <br/>
 
-        {/* DATE */}
         <div className="form-group">
           <label>Select Date</label>
 
@@ -167,7 +171,6 @@ function BookService() {
 
         <br/>
 
-        {/* TIME SLOT */}
         <div className="form-group">
           <label>Select Time Slot</label>
 
@@ -185,20 +188,20 @@ function BookService() {
 
         <br/>
 
-        {/* BUTTON */}
+        {/* 🔥 SAME BUTTON UI (ONLY FUNCTION CHANGED) */}
         <button
           className="btn btn-success w-100"
-          onClick={bookNow}
+          onClick={handlePayment}
           disabled={loading}
           style={{
             padding: "12px",
             fontWeight: "bold",
             borderRadius: "10px",
-            background: loading ? "#aaa" : "#28a745",
+            background: loading ? "#aaa" : "#0084B4",
             border: "none"
           }}
         >
-          {loading ? "Booking..." : "Confirm Booking"}
+          {loading ? "Processing..." : "Confirm & Pay"}
         </button>
 
       </div>

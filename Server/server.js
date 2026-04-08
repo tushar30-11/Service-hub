@@ -3,6 +3,12 @@ const mysql = require("mysql");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
+const Razorpay = require("razorpay");
+
+const razorpay = new Razorpay({
+  key_id: "rzp_test_SaY0UR8jNHBi3V",
+  key_secret: "61ZNWJ3ZcDBa85uortfe6Yeh"
+});
 
 const app = express();
 
@@ -957,18 +963,29 @@ app.post("/api/bookservice", (req, res) => {
     service_id,
     address,
     booking_day,
-    time_slot
+    time_slot,
+    payment_status
   } = req.body;
 
+  // ✅ SQL YAHI DEFINE HOGA
   const sql = `
-  INSERT INTO tbl_booking
-  (user_id, provider_id, service_id, address, booking_day, time_slot, status)
-  VALUES (?, ?, ?, ?, ?, ?, 0)
+    INSERT INTO tbl_booking
+    (user_id, provider_id, service_id, address, booking_day, time_slot, payment_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
+  // ✅ YAHI USE HOGA
   con.query(
     sql,
-    [user_id, provider_id, service_id, address, booking_day, time_slot],
+    [
+      user_id,
+      provider_id,
+      service_id,
+      address,
+      booking_day,
+      time_slot,
+      payment_status || "Pending"
+    ],
     (err, result) => {
 
       if (err) {
@@ -982,7 +999,6 @@ app.post("/api/bookservice", (req, res) => {
   );
 
 });
-
 app.post("/api/providerbookings", (req, res) => {
 
   const provider_id = req.body.provider_id;
@@ -1438,6 +1454,154 @@ app.post("/api/provider/assignstaff", (req, res) => {
 
 });
 
+/// ==========================================================
+// NEARBY SERVICES (FINAL)
+// ==========================================================
+app.post("/api/nearbyservices", (req, res) => {
+
+  const { latitude, longitude, radius } = req.body;
+
+  console.log("LAT:", latitude, "LNG:", longitude, "RADIUS:", radius);
+
+  const userRadius = radius || 20; // 🔥 default 20km
+
+  const sql = `
+    SELECT 
+      s.service_id,
+      s.service_name,
+      s.price,
+      s.service_image,
+      p.provider_name,
+
+      (
+        6371 * ACOS(
+          COS(RADIANS(?)) *
+          COS(RADIANS(p.latitude)) *
+          COS(RADIANS(p.longitude) - RADIANS(?)) +
+          SIN(RADIANS(?)) *
+          SIN(RADIANS(p.latitude))
+        )
+      ) AS distance
+
+    FROM tbl_service s
+    JOIN provider_details p 
+      ON s.provider_id = p.provider_id
+
+    HAVING distance <= ?
+    ORDER BY distance ASC
+  `;
+
+  con.query(
+    sql,
+    [latitude, longitude, latitude, userRadius],
+    (err, result) => {
+
+      if (err) {
+        console.log("ERROR:", err);
+        return res.json({ success: false });
+      }
+
+      res.json({
+        success: true,
+        data: result
+      });
+
+    }
+  );
+
+});
+
+
+// ==========================================================
+// UPDATE PROVIDER LOCATION
+// ==========================================================
+app.post("/api/provider/updatelocation", (req, res) => {
+
+  const { provider_id, latitude, longitude } = req.body;
+
+  if (!provider_id || !latitude || !longitude) {
+    return res.json({
+      success: false,
+      message: "Missing data"
+    });
+  }
+
+  const sql = `
+    UPDATE provider_details 
+    SET latitude = ?, longitude = ?
+    WHERE provider_id = ?
+  `;
+
+  con.query(sql, [latitude, longitude, provider_id], (err, result) => {
+
+    if (err) {
+      console.log(err);
+      return res.json({ success: false });
+    }
+
+    res.json({
+      success: true,
+      message: "Location updated successfully"
+    });
+
+  });
+
+});
+
+
+// ================= USER LOCATION UPDATE =================
+app.post("/api/user/updatelocation", (req, res) => {
+
+  const { user_id, latitude, longitude } = req.body;
+
+  if (!user_id || !latitude || !longitude) {
+    return res.json({ success: false, message: "Missing data" });
+  }
+
+  const sql = `
+    UPDATE tbl_user
+    SET latitude = ?, longitude = ?
+    WHERE user_id = ?
+  `;
+
+  con.query(sql, [latitude, longitude, user_id], (err, result) => {
+
+    if (err) {
+      console.log("User location error:", err);
+      return res.json({ success: false });
+    }
+
+    res.json({ success: true });
+
+  });
+
+});
+
+// ==========================================================
+// CREATE ORDER (RAZORPAY)
+// ==========================================================
+app.post("/api/createorder", async (req, res) => {
+
+  try {
+
+    const { amount } = req.body;
+
+    const options = {
+      amount: amount * 100,
+      currency: "INR",
+      receipt: "receipt_" + Date.now()
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.json(order);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("Error creating order");
+  }
+
+});
 // ================= START SERVER =================
 app.listen(1337, () => {
   console.log("Server running on http://127.0.0.1:1337");

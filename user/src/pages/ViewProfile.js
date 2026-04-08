@@ -60,7 +60,7 @@ My Profile
 
 <Link to="/editprofile">
 
-<button className="btn btn-success w-100">
+<button className="btn btn-success w-100" style={{background:"#0084B4", color:"#fff"}}>
 Edit Profile
 </button>
 

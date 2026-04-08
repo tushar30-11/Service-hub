@@ -29,24 +29,16 @@ function Header() {
     setUser(storedUser);
   }, [location]);
 
-
   // GET ALL CATEGORY
-
   useEffect(()=>{
-
     axios.get("http://127.0.0.1:1337/api/getallcategory")
     .then((res)=>{
-
       setCategories(res.data);
-
     })
     .catch((err)=>{
       console.log(err);
     });
-
   },[]);
-
-
 
   const handleLogout = () => {
     sessionStorage.removeItem("userdata");
@@ -56,7 +48,6 @@ function Header() {
 
   return (
 <header>
-
 
 {/* MIDDLE HEADER */}
 
@@ -129,7 +120,6 @@ Mail Us
 </div>
 </div>
 
-
 {/* NAVBAR */}
 
 <div
@@ -163,6 +153,12 @@ background: "#4CAF0A"
 <Link to="/about">About Us</Link>
 </li>
 
+{/* 🔥 NEW: NEARBY SERVICES */}
+<li>
+<Link to="/nearby" style={{color:"#fff", fontWeight:"600"}}>
+Nearby Services
+</Link>
+</li>
 
 {/* SERVICES MENU */}
 
@@ -191,44 +187,30 @@ All Category
 
 </li>
 
-
 <li>
 <Link to="/contact">Contact Us</Link>
 </li>
 
-
 {/* MY BOOKINGS */}
-
 {user && (
-
 <li>
 <Link to="/mybookings">
 My Bookings
 </Link>
 </li>
-
 )}
 
-
-
 {/* MANAGE PROFILE MENU */}
-
 {user && (
-
 <li>
 <Link to="/viewprofile">
 Manage Profile
 </Link>
 </li>
-
 )}
 
-
-
 {/* LOGIN / LOGOUT */}
-
 {user ? (
-
 <li>
 <a
 href="/#"
@@ -238,15 +220,12 @@ style={{cursor:"pointer"}}
 Logout
 </a>
 </li>
-
 ) : (
-
 <li>
 <Link to="/login">
 Login / Register
 </Link>
 </li>
-
 )}
 
 </ul>

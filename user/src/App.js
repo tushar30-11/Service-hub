@@ -14,6 +14,7 @@ import ViewProfile from "./pages/ViewProfile";
 import EditProfile from "./pages/EditProfile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import NearbyServices from "./pages/NearbyServices";
 
 
 function App() {
@@ -34,6 +35,8 @@ function App() {
         <Route path="/editprofile" element={<EditProfile />} />
         <Route path="/forgotpassword" element={<ForgotPassword/>}/>
         <Route path="/resetpassword" element={<ResetPassword/>}/>
+        
+        <Route path="/nearby" element={<NearbyServices />} />
         
       </Routes>
 

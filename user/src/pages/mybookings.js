@@ -38,7 +38,7 @@ function MyBookings() {
 
           <table className="table table-bordered table-striped">
 
-            <thead style={{background:"#4CAF0A", color:"#fff"}}>
+            <thead style={{background:"#0084B4", color:"#fff"}}>
               <tr>
                 <th>#</th>
                 <th>Service</th>

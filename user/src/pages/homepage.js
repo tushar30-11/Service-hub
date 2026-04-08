@@ -211,5 +211,4 @@ alt={service.service_name}
   );
 }
 
-export default Homepage;
-
+export default Homepage; 

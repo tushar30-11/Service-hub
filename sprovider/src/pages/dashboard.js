@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Axios from "axios";
+import Swal from "sweetalert2";
 
 function Dashboard() {
   const [totalCategory, setTotalCategory] = useState(0);
@@ -15,6 +16,7 @@ function Dashboard() {
   useEffect(() => {
     if (user && user.provider_id) {
       loadDashboardData();
+      autoSetLocation(); // 🔥 AUTO LOCATION
     }
   }, []);
 
@@ -54,6 +56,102 @@ function Dashboard() {
       .catch((err) => {
         console.log("Booking count error:", err);
       });
+  };
+
+  // ===============================
+  // 🔥 AUTO LOCATION (FIRST TIME ONLY)
+  // ===============================
+  const autoSetLocation = () => {
+
+    const savedLat = localStorage.getItem("provider_lat");
+    const savedLng = localStorage.getItem("provider_lng");
+
+    if (savedLat && savedLng) {
+      console.log("Using saved location");
+      return;
+    }
+
+    if (navigator.geolocation) {
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        localStorage.setItem("provider_lat", lat);
+        localStorage.setItem("provider_lng", lng);
+
+        try {
+          await Axios.post(
+            "http://localhost:1337/api/provider/updatelocation",
+            {
+              provider_id: user.provider_id,
+              latitude: lat,
+              longitude: lng
+            }
+          );
+        } catch (err) {
+          console.log(err);
+        }
+
+      });
+
+    }
+
+  };
+
+  // ===============================
+  // 🔥 MANUAL LOCATION BUTTON
+  // ===============================
+  const setLocation = () => {
+
+    if (!navigator.geolocation) {
+      Swal.fire("Error", "Geolocation not supported", "error");
+      return;
+    }
+
+    Swal.fire({
+      title: "Getting your location...",
+      text: "Please wait...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      try {
+        const res = await Axios.post(
+          "http://localhost:1337/api/provider/updatelocation",
+          {
+            provider_id: user.provider_id,
+            latitude: lat,
+            longitude: lng
+          }
+        );
+
+        localStorage.setItem("provider_lat", lat);
+        localStorage.setItem("provider_lng", lng);
+
+        if (res.data.success) {
+          Swal.fire("Success ✅", "Location updated successfully!", "success");
+        } else {
+          Swal.fire("Error", "Update failed", "error");
+        }
+
+      } catch (err) {
+        console.log(err);
+        Swal.fire("Error", "Server error", "error");
+      }
+
+    }, () => {
+      Swal.fire("Error", "Location permission denied", "error");
+    });
+
   };
 
   return (
@@ -187,7 +285,6 @@ function Dashboard() {
             `}
           </style>
 
-          {/* WELCOME SECTION */}
           <div className="welcome-box">
             <h2 className="premium-dashboard-title">
               Welcome back{user && user.provider_name ? `, ${user.provider_name}` : ""}
@@ -195,18 +292,16 @@ function Dashboard() {
             <p className="premium-dashboard-subtitle">
               Here is a quick overview of your <span className="welcome-highlight">SERVICE HUB</span> performance.
             </p>
+
+            <button onClick={setLocation} className="btn btn-primary mt-3">
+              📍 Set My Location
+            </button>
           </div>
 
           <div className="row">
 
-            {/* CARD 1 */}
             <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-              <div
-                className="premium-stat-card"
-                style={{
-                  background: "linear-gradient(135deg, #667eea, #764ba2)"
-                }}
-              >
+              <div className="premium-stat-card" style={{ background: "linear-gradient(135deg, #667eea, #764ba2)" }}>
                 <div className="premium-glow"></div>
                 <div className="premium-card-inner">
                   <div>
@@ -215,69 +310,42 @@ function Dashboard() {
                     <h2 className="premium-value">{totalCategory}</h2>
                     <p className="premium-desc">Your active service categories</p>
                   </div>
-
                   <div className="premium-img-wrap">
-                    <img
-                      className="premium-stat-img"
-                      src="assets/img/banner/4.png"
-                      alt="category"
-                    />
+                    <img className="premium-stat-img" src="assets/img/banner/4.png" alt="category"/>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CARD 2 */}
             <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-              <div
-                className="premium-stat-card"
-                style={{
-                  background: "linear-gradient(135deg, #11998e, #38ef7d)"
-                }}
-              >
+              <div className="premium-stat-card" style={{ background: "linear-gradient(135deg, #11998e, #38ef7d)" }}>
                 <div className="premium-glow"></div>
                 <div className="premium-card-inner">
                   <div>
                     <span className="premium-badge">Performance</span>
                     <h5 className="premium-label">Total Service</h5>
                     <h2 className="premium-value">{totalService}</h2>
-                    <p className="premium-desc">Services listed by you for your knowladge</p>
+                    <p className="premium-desc">Services listed by you</p>
                   </div>
-
                   <div className="premium-img-wrap">
-                    <img
-                      className="premium-stat-img"
-                      src="assets/img/banner/3.png"
-                      alt="service"
-                    />
+                    <img className="premium-stat-img" src="assets/img/banner/3.png" alt="service"/>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* CARD 3 */}
             <div className="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-4">
-              <div
-                className="premium-stat-card"
-                style={{
-                  background: "linear-gradient(135deg, #ff6a00, #ee0979)"
-                }}
-              >
+              <div className="premium-stat-card" style={{ background: "linear-gradient(135deg, #ff6a00, #ee0979)" }}>
                 <div className="premium-glow"></div>
                 <div className="premium-card-inner">
                   <div>
                     <span className="premium-badge">Bookings</span>
                     <h5 className="premium-label">Total Booking</h5>
                     <h2 className="premium-value">{totalBooking}</h2>
-                    <p className="premium-desc">Bookings received on your services</p>
+                    <p className="premium-desc">Bookings received</p>
                   </div>
-
                   <div className="premium-img-wrap">
-                    <img
-                      className="premium-stat-img"
-                      src="assets/img/banner/1.png"
-                      alt="booking"
-                    />
+                    <img className="premium-stat-img" src="assets/img/banner/1.png" alt="booking"/>
                   </div>
                 </div>
               </div>
